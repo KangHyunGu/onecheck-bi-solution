@@ -2,6 +2,13 @@
 // https://v2.quasar.dev/quasar-cli-webpack/quasar-config-file
 
 import { defineConfig } from '#q-app/wrappers'
+import { fileURLToPath } from 'url'
+import { dirname, resolve } from 'path'
+
+// ESM에서는 __dirname을 다음과 같이 계산합니다.
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = dirname(__filename)
+
 
 export default defineConfig((ctx) => {
   return {
@@ -37,7 +44,10 @@ export default defineConfig((ctx) => {
     // Full list of options: https://v2.quasar.dev/quasar-cli-webpack/quasar-config-file#build
     build: {
       // publicPath: '/',
-      vueRouterMode: 'hash', // available values: 'hash', 'history'
+      vueRouterMode: 'history', // available values: 'hash', 'history'
+      alias: {
+        '@utils': resolve(__dirname, 'src/utils')
+      },
 
       // webpackTranspile: false,
 

@@ -1,117 +1,154 @@
 <template>
-  <q-layout view="lHh Lpr lFf">
+  <q-layout view="lHh Lpr lFf" style="height: 100vh;">
+    <!-- 상단 헤더 -->
     <q-header elevated>
       <q-toolbar>
-        <q-btn
-          flat
-          dense
-          round
-          icon="menu"
-          aria-label="Menu"
-          @click="toggleLeftDrawer"
-        />
-
-        <q-toolbar-title>
-          Quasar App
-        </q-toolbar-title>
-
-        <div>Quasar v{{ $q.version }}</div>
+        <q-toolbar-title>週刊レ포ート</q-toolbar-title>
+        <q-space />
+        <div class="text-caption q-mr-md">2025년 6월 22일 (일요일)</div>
+        <q-btn flat round icon="settings" @click="onClickSettings" />
       </q-toolbar>
     </q-header>
 
-    <q-drawer
-      v-model="leftDrawerOpen"
-      show-if-above
-      bordered
-    >
-      <q-list>
-        <q-item-label
-          header
-        >
-          Essential Links
-        </q-item-label>
-
-        <EssentialLink
-          v-for="link in linksList"
-          :key="link.title"
-          v-bind="link"
-        />
-      </q-list>
-    </q-drawer>
-
+    <!-- 페이지 컨테이너 -->
     <q-page-container>
-      <router-view />
+      <q-page class="row no-wrap fit q-pa-md" style="height: 100%;">
+        <!-- 왼쪽: ResponseTemplate 컴포넌트 및 Q&A 카드 목록 (스크롤 영역) -->
+        <q-scroll-area class="col-10 q-pr-md">
+          <div style="padding-right: 16px;">
+
+            <!-- Q&A 카드 목록 -->
+            <div
+              v-for="(qa, index) in qaList"
+              :key="index"
+              class="q-mt-md"
+              style="white-space: pre-wrap;"
+            >
+              <q-card outlined>
+                <q-card-section>
+                  <div class="text-subtitle1">Q. {{ qa.question }}</div>
+                </q-card-section>
+                <q-separator />
+                <q-card-section>
+                  <response-template v-if="qa.question_knd == 1 || qa.question.includes('전체 매출 요약')"></response-template>
+                  <response-store-summary v-if="qa.question_knd == 2 || qa.question.includes('점포별 매출 요약')"></response-store-summary>
+                  <div v-else class="text-body1" style="white-space: pre-wrap;" v-html="qa.answer"></div>
+                </q-card-section>
+              </q-card>
+            </div>
+          </div>
+        </q-scroll-area>
+
+        <!-- 오른쪽: 질문 입력 섹션 (col-2) -->
+        <div class="col-2">
+          <q-card class="column full-height" outlined>
+            <q-card-section>
+              <p class="text-body2">
+                궁금하신 점을 아래에 입력해 주세요.<br/>
+                질문을 등록하면, 왼쪽에 새로운 카드가 추가됩니다.
+              </p>
+            </q-card-section>
+            <q-separator />
+            <q-card-actions class="q-pa-md full-width">
+              <q-input
+                class="col"
+                v-model="question"
+                type="textarea"
+                outlined
+                autogrow
+                rows="1"
+                max-rows="5"
+                placeholder="Shift+Enter로 줄바꿈, Enter로 전송"
+                @keyup="onKeyUp"
+              >
+                <template v-slot:append>
+                  <q-btn flat round icon="send" @click="sendQuestion" />
+                </template>
+              </q-input>
+            </q-card-actions>
+
+            <!-- 질문 유형 샘플 버튼 목록 -->
+            <q-card-section>
+              <p class="text-caption q-mb-sm">질문 유형 샘플</p>
+              <div class="column items-start q-col-gutter-sm">
+                <q-btn
+                  v-for="(sample, i) in sampleQuestions"
+                  :key="i"
+                  class="q-mb-sm fit"
+                  color="orange"
+                  outline
+                  size="mb"
+                  :label="sample"
+                  @click="onSampleQuestion(sample, i)"
+                />
+              </div>
+            </q-card-section>
+          </q-card>
+        </div>
+      </q-page>
     </q-page-container>
   </q-layout>
 </template>
 
 <script>
-import { defineComponent, ref } from 'vue'
-import EssentialLink from 'components/EssentialLink.vue'
+import ResponseTemplate from 'components/ResponseTemplate.vue';
+import ResponseStoreSummary from 'src/components/ResponseStoreSummary.vue';
 
-const linksList = [
-  {
-    title: 'Docs',
-    caption: 'quasar.dev',
-    icon: 'school',
-    link: 'https://quasar.dev'
-  },
-  {
-    title: 'Github',
-    caption: 'github.com/quasarframework',
-    icon: 'code',
-    link: 'https://github.com/quasarframework'
-  },
-  {
-    title: 'Discord Chat Channel',
-    caption: 'chat.quasar.dev',
-    icon: 'chat',
-    link: 'https://chat.quasar.dev'
-  },
-  {
-    title: 'Forum',
-    caption: 'forum.quasar.dev',
-    icon: 'record_voice_over',
-    link: 'https://forum.quasar.dev'
-  },
-  {
-    title: 'Twitter',
-    caption: '@quasarframework',
-    icon: 'rss_feed',
-    link: 'https://twitter.quasar.dev'
-  },
-  {
-    title: 'Facebook',
-    caption: '@QuasarFramework',
-    icon: 'public',
-    link: 'https://facebook.quasar.dev'
-  },
-  {
-    title: 'Quasar Awesome',
-    caption: 'Community Quasar projects',
-    icon: 'favorite',
-    link: 'https://awesome.quasar.dev'
-  }
-]
-
-export default defineComponent({
+export default {
   name: 'MainLayout',
-
   components: {
-    EssentialLink
+    ResponseTemplate,
+    ResponseStoreSummary
   },
-
-  data () {
+  data() {
     return {
-      linksList,
-      leftDrawerOpen: false
+      question: '',
+      qaList: [],  // 각 Q&A 항목: { question: string, answer: string }
+      question_knd: 0,
+      sampleQuestions: [
+        '4월 전체 매출 요약이 궁금해요',
+        '방문자 수 감소 원인은 무엇인가요?',
+        '점포별 매출 편차가 큰 이유는?',
+        '카테고리별 매출 변화는 어떻게 되나요?',
+        '추가 개선 방안은 무엇인가요?'
+      ]
     }
   },
-
   methods: {
-    toggleLeftDrawer () {
-      this.leftDrawerOpen = !this.leftDrawerOpen
+    onClickSettings() {
+      alert('설정 창을 열 예정입니다.');
+    },
+    onKeyUp(event) {
+      if (event.key === 'Enter' && !event.shiftKey) {
+        this.sendQuestion();
+        event.preventDefault(); // textarea 기본 개행 막기
+      }
+    },
+    sendQuestion(question_knd = 0) {
+      if (!this.question.trim()) return;
+      const generatedAnswer = this.generateAnswer(this.question);
+      this.qaList.push({
+        question: this.question,
+        answer: generatedAnswer,
+        question_knd,
+      });
+      this.question = '';
+    },
+    generateAnswer(q) {
+      return `요청하신 내용에 대해 답변이 어렵습니다.`;
+    },
+    onSampleQuestion(sample, index){
+      console.log(sample);
+      console.log(this.question);
+      this.question = this.sampleQuestions[index];
+      console.log(22222);
+
+      this.sendQuestion(index + 1);
     }
   }
-})
+}
 </script>
+
+<style scoped>
+/* 필요한 추가 스타일 작성 */
+</style>
