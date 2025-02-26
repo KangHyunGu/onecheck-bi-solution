@@ -1,11 +1,11 @@
 <template>
-  <q-layout view="lHh Lpr lFf" style="height: 100vh;">
+  <q-layout view="lHh Lpr lFf" style="height: 100vh;" color="orange-9">
     <!-- 상단 헤더 -->
-    <q-header elevated>
+    <q-header elevated class="bg-orange-9">
       <q-toolbar>
-        <q-toolbar-title>週刊レ포ート</q-toolbar-title>
+        <!-- <q-toolbar-title>週刊レ포ート</q-toolbar-title> -->
         <q-space />
-        <div class="text-caption q-mr-md">2025년 6월 22일 (일요일)</div>
+        <!-- <div class="text-caption q-mr-md">2025년 6월 22일 (일요일)</div> -->
         <q-btn flat round icon="settings" @click="onClickSettings" />
       </q-toolbar>
     </q-header>
@@ -30,8 +30,8 @@
                 </q-card-section>
                 <q-separator />
                 <q-card-section>
-                  <response-template v-if="qa.question_knd == 1 || qa.question.includes('전체 매출 요약')"></response-template>
-                  <response-store-summary v-if="qa.question_knd == 2 || qa.question.includes('점포별 매출 요약')"></response-store-summary>
+                  <response-template v-if="qa.question_knd == 1 || qa.question.includes('전체 매출')"></response-template>
+                  <response-store-summary v-if="qa.question_knd == 2 || qa.question.includes('점포별 매출')"></response-store-summary>
                   <div v-else class="text-body1" style="white-space: pre-wrap;" v-html="qa.answer"></div>
                 </q-card-section>
               </q-card>
@@ -75,7 +75,7 @@
                   v-for="(sample, i) in sampleQuestions"
                   :key="i"
                   class="q-mb-sm fit"
-                  color="orange"
+                  color="orange-9"
                   outline
                   size="mb"
                   :label="sample"
@@ -106,11 +106,8 @@ export default {
       qaList: [],  // 각 Q&A 항목: { question: string, answer: string }
       question_knd: 0,
       sampleQuestions: [
-        '4월 전체 매출 요약이 궁금해요',
-        '방문자 수 감소 원인은 무엇인가요?',
-        '점포별 매출 편차가 큰 이유는?',
-        '카테고리별 매출 변화는 어떻게 되나요?',
-        '추가 개선 방안은 무엇인가요?'
+        '전체 매출 요약',
+        '점포별 매출 현황',
       ]
     }
   },
@@ -135,14 +132,15 @@ export default {
       this.question = '';
     },
     generateAnswer(q) {
+      if(q.includes("전체 매출") || q.includes("점포별 매출")){
+        return '';
+      }
       return `요청하신 내용에 대해 답변이 어렵습니다.`;
     },
     onSampleQuestion(sample, index){
       console.log(sample);
       console.log(this.question);
       this.question = this.sampleQuestions[index];
-      console.log(22222);
-
       this.sendQuestion(index + 1);
     }
   }
