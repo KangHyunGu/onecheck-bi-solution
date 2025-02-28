@@ -122,14 +122,32 @@ export default {
       }
     },
     sendQuestion(question_knd = 0) {
+      // 질문이 비어있으면 중단
       if (!this.question.trim()) return;
-      const generatedAnswer = this.generateAnswer(this.question);
-      this.qaList.push({
-        question: this.question,
-        answer: generatedAnswer,
-        question_knd,
-      });
-      this.question = '';
+
+      // (1) 로딩 표시 시작
+      this.$q.loading.show({message: '응답 준비 중입니다.'});
+
+      // (2) 2~5초 사이 랜덤 대기 시간 계산 (ms 단위)
+      const delay = Math.floor(Math.random() * (5000 - 2000 + 1)) + 2000;
+
+      // (3) setTimeout으로 랜덤 대기 후 답변 생성
+      setTimeout(() => {
+        const generatedAnswer = this.generateAnswer(this.question);
+
+        // (4) Q&A 리스트에 추가
+        this.qaList.push({
+          question: this.question,
+          answer: generatedAnswer,
+          question_knd,
+        });
+
+        // (5) 입력창 비우기
+        this.question = '';
+
+        // (6) 로딩 표시 종료
+        this.$q.loading.hide();
+      }, delay);
     },
     generateAnswer(q) {
       if(q.includes("전체 매출") || q.includes("점포별 매출")){
@@ -138,8 +156,6 @@ export default {
       return `요청하신 내용에 대해 답변이 어렵습니다.`;
     },
     onSampleQuestion(sample, index){
-      console.log(sample);
-      console.log(this.question);
       this.question = this.sampleQuestions[index];
       this.sendQuestion(index + 1);
     }

@@ -97,7 +97,7 @@ export default defineConfig((ctx) => {
       // directives: [],
 
       // Quasar plugins
-      plugins: []
+      plugins: ['Loading']
     },
 
     // animations: 'all', // --- includes all animations
@@ -111,7 +111,7 @@ export default defineConfig((ctx) => {
     //   store: 'src/store/index',
     //   indexHtmlTemplate: 'index.html',
     //   pwaRegisterServiceWorker: 'src-pwa/register-service-worker',
-    //   pwaServiceWorker: 'src-pwa/custom-service-worker',
+    //   pwaServiceWorker: 'src-pwa/custom-service-worker',`
     //   pwaManifestFile: 'src-pwa/manifest.json',
     //   electronMain: 'src-electron/electron-main',
     //   electronPreload: 'src-electron/electron-preload'
