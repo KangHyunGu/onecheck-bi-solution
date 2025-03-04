@@ -153,6 +153,7 @@ export default {
   mounted() {
     // (2) 멀티라인 문자열에서 불필요한 줄바꿈/공백을 정리
     this.fullContent = this.fullContent.replace(/\s*\n\s*/g, ' ').trim();
+    console.log(this.fullContent);
     // (3) 스트리밍 시작
     this.startStreaming();
   },
@@ -171,6 +172,7 @@ export default {
         if (this.currentIndex < this.fullContent.length) {
           this.streamedContent += this.fullContent[this.currentIndex];
           this.currentIndex++;
+          this.$emit('content-updated'); // 🔥 자동 스크롤 이벤트 발생
         } else {
           clearInterval(this.timer);
         }

@@ -1,7 +1,7 @@
 <template>
   <div class="response-template-container">
     <!-- 스트리밍된 HTML이 표시될 영역 -->
-    <div v-html="streamedContent" class="streamed-content"></div>
+    <div ref="contentContainer" v-html="streamedContent" class="streamed-content"></div>
   </div>
 </template>
 
@@ -90,7 +90,9 @@ export default {
   },
   mounted() {
     // 불필요한 줄바꿈 및 들여쓰기 공백 제거
+    console.log('before : ', this.fullContent);
     this.fullContent = this.fullContent.replace(/\s*\n\s*/g, ' ').trim();
+    console.log('after : ',  this.fullContent);
     // 스트리밍 시작
     this.startStreaming();
   },
@@ -106,6 +108,7 @@ export default {
         if (this.currentIndex < this.fullContent.length) {
           this.streamedContent += this.fullContent[this.currentIndex];
           this.currentIndex++;
+          this.$emit('content-updated'); // 🔥 자동 스크롤 이벤트 발생
         } else {
           clearInterval(this.timer);
         }
@@ -116,7 +119,7 @@ export default {
 </script>
 
 <style scoped>
-/* 스트리밍 영역의 white-space 설정 */
+/* 스트리밍 영역의 스타일 - 필요 시 높이 제한 후 스크롤 생성 */
 .streamed-content {
   white-space: normal;
 }
