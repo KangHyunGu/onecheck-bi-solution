@@ -111,9 +111,9 @@ export default {
             </div>
           </div>
 
-          <!-- ✅ Worse 3 점포 -->
+          <!-- ✅ Bottom 3 점포 -->
           <div class="q-mb-md">
-            <div class="bg-red-3 text-black q-pa-sm text-h6">⚠️ Worse 3 점포 (매출 감소율 큼)</div>
+            <div class="bg-red-3 text-black q-pa-sm text-h6">⚠️ Bottom 3 점포 (매출 감소율 큼)</div>
             <div class="store-card q-mb-md">
               <div class="card-section">
                 <div class="text-h6">긴시초점</div>
