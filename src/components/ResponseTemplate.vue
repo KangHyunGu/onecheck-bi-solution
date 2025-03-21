@@ -110,6 +110,7 @@ export default {
           this.currentIndex++;
           this.$emit('content-updated'); // 🔥 자동 스크롤 이벤트 발생
         } else {
+          this.$emit('update:isRunning', false);
           clearInterval(this.timer);
         }
       }, 20);
