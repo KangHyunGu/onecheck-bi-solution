@@ -62,8 +62,8 @@
         <div class="col-2">
           <q-card class="column full-height" outlined>
             <q-card-section>
-              <p class="text-h4 text-center">
-                매장 운영·고객 행동 분석 등 <br />필요하다면 물어보세요!
+              <p class="text-h5 text-center">
+                무엇을 도와드릴까요?
               </p>
             </q-card-section>
             <q-separator />
@@ -273,5 +273,14 @@ export default {
   overflow: hidden;
   transition: min-height 0.25s ease;
   min-height: 0;
+}
+
+.streamed-content .fade-in {
+  opacity: 0;
+  transition: opacity 0.2s ease-in-out;
+}
+
+.streamed-content .fade-in.show {
+  opacity: 1;
 }
 </style>

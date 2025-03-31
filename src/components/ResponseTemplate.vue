@@ -1,7 +1,7 @@
 <template>
   <div class="response-template-container">
     <!-- 스트리밍된 HTML이 표시될 영역 -->
-    <div ref="contentContainer" v-html="streamedContent" class="streamed-content"></div>
+    <div ref="contentContainer" class="streamed-content" v-html="streamedContent"></div>
   </div>
 </template>
 
@@ -10,9 +10,8 @@ export default {
   name: 'ResponseTemplate',
   data() {
     return {
-      // 멀티라인으로 작성한 HTML 문자열
       fullContent: `
-      <!-- 4월 전체 매출 현황 -->
+        <!-- 4월 전체 매출 현황 -->
         <div>
           <h5>4월 전체 매출 현황</h5>
           <p>
@@ -22,7 +21,6 @@ export default {
             </ul>
           </p>
         </div>
-
         <!-- 매출 감소의 주요 원인 -->
         <div>
           <h5>매출 감소의 주요 원인</h5>
@@ -32,7 +30,6 @@ export default {
             <li><strong>CVR(전환율) 하락</strong>: 92bps 감소 (CtC -152bps)</li>
           </ul>
         </div>
-
         <!-- 점포별 매출 영향 -->
         <div>
           <h5>매출 감소에 가장 크게 기여한 점포:</h5>
@@ -43,7 +40,6 @@ export default {
           </ul>
           <hr class="q-my-md" />
         </div>
-
         <!-- 카테고리별 매출 영향 -->
         <div>
           <h5>카테고리별 매출 영향</h5>
@@ -70,7 +66,6 @@ export default {
             </li>
           </ol>
         </div>
-
         <!-- 요약 -->
         <div>
           <h5>요약</h5>
@@ -83,56 +78,106 @@ export default {
           </p>
         </div>
       `,
-      streamedContent: '', // 스트리밍되어 화면에 표시될 HTML
-      currentIndex: 0,     // 현재까지 노출한 문자열의 인덱스
-      timer: null,         // setInterval 타이머 참조
+      streamedContent: '',
+      tokens: [],
+      currentIndex: 0,
+      timer: null,
     };
   },
   mounted() {
-    // 불필요한 줄바꿈 및 들여쓰기 공백 제거
-    console.log('before : ', this.fullContent);
-    this.fullContent = this.fullContent.replace(/\s*\n\s*/g, ' ').trim();
-    console.log('after : ',  this.fullContent);
-    // 스트리밍 시작
+    this.prepareTokens();
     this.startStreaming();
   },
   beforeDestroy() {
-    if (this.timer) {
-      clearInterval(this.timer);
-    }
+    if (this.timer) clearTimeout(this.timer);
   },
   methods: {
-    // 10ms 간격으로 한 글자씩 streamedContent에 추가
+    // HTML 태그는 그대로, 일반 텍스트는 글자 단위로 분리
+    prepareTokens() {
+      const tokens = [];
+      let inTag = false;
+      let currentToken = '';
+      for (let i = 0; i < this.fullContent.length; i++) {
+        const char = this.fullContent[i];
+        if (char === '<') {
+          if (currentToken !== '') {
+            // 일반 텍스트가 있다면 글자 단위로 분리하여 추가
+            tokens.push(...currentToken.split(''));
+            currentToken = '';
+          }
+          inTag = true;
+          currentToken += char;
+        } else if (char === '>') {
+          currentToken += char;
+          tokens.push(currentToken);
+          currentToken = '';
+          inTag = false;
+        } else {
+          if (inTag) {
+            currentToken += char;
+          } else {
+            tokens.push(char);
+          }
+        }
+      }
+      if (currentToken !== '') {
+        tokens.push(currentToken);
+      }
+      this.tokens = tokens;
+    },
     startStreaming() {
-      this.timer = setInterval(() => {
-        if (this.currentIndex < this.fullContent.length) {
-          this.streamedContent += this.fullContent[this.currentIndex];
-          this.currentIndex++;
-          this.$emit('content-updated'); // 🔥 자동 스크롤 이벤트 발생
+      const streamNextToken = () => {
+        if (this.currentIndex < this.tokens.length) {
+          const token = this.tokens[this.currentIndex++];
+          if (/^<[^>]+>$/.test(token)) {
+            // HTML 태그는 그대로 추가
+            this.streamedContent += token;
+          } else {
+            // 일반 텍스트(글자)는 span 태그로 감싸고, 인덱스 기반 딜레이를 적용
+            const delay = (this.currentIndex * 30) + 'ms';
+            this.streamedContent += `<span class="letter" style="animation-delay: ${delay}">${token}</span>`;
+          }
+          this.$emit('content-updated');
+          this.timer = setTimeout(streamNextToken, 20);
         } else {
           this.$emit('update:isRunning', false);
-          clearInterval(this.timer);
         }
-      }, 20);
-    }
+      };
+      streamNextToken();
+    },
   }
 };
 </script>
 
 <style scoped>
-/* 스트리밍 영역의 스타일 - 필요 시 높이 제한 후 스크롤 생성 */
 .streamed-content {
   white-space: normal;
 }
 
-/* ul, li 기본 여백 제거 */
-ul, li {
-  margin: 0;
-  padding: 0;
+/* 각 글자를 inline-block으로 표시하여 애니메이션 적용 */
+.letter {
+  display: inline-block;
+  opacity: 0;
+  transform: translateY(10px);
+  /* fade-in-out 효과: 글자가 나타났다가 잠시 사라졌다가 최종적으로 나타남 */
+  animation: fadeInOut 0.6s forwards;
 }
 
-/* 필요 시 .response-template-container에 추가 스타일 적용 */
-.response-template-container {
-  /* 예시: padding: 16px; */
+/* fade-in-out 키프레임 애니메이션 */
+@keyframes fadeInOut {
+  0% {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  50% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  70% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
 }
 </style>

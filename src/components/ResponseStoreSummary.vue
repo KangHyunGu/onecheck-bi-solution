@@ -1,6 +1,5 @@
 <template>
   <div class="response-template-container">
-    <!-- 스트리밍된 HTML이 표시될 영역 -->
     <div v-html="streamedContent" class="streamed-content"></div>
   </div>
 </template>
@@ -10,12 +9,8 @@ export default {
   name: 'ResponseTemplate',
   data() {
     return {
-      /**
-       * (1) 멀티라인으로 작성된 HTML 문자열
-       *  - 테이블을 없애고, 텍스트·줄바꿈만으로 점포 정보를 표시
-       */
       fullContent: `
-        <div class="q-pa-md">
+             <div class="q-pa-md">
 
           <!-- ✅ 전체 점포 리스트 -->
           <div class="q-mb-md">
@@ -145,99 +140,47 @@ export default {
 
         </div>
       `,
-      streamedContent: '', // 스트리밍되어 화면에 표시될 HTML
-      currentIndex: 0,     // 현재까지 노출한 문자열의 인덱스
-      timer: null,         // setInterval 타이머 참조
+      streamedContent: '',
+      tokens: [],
+      timer: null,
+      currentIndex: 0,
     };
   },
   mounted() {
-    // (2) 멀티라인 문자열에서 불필요한 줄바꿈/공백을 정리
-    this.fullContent = this.fullContent.replace(/\s*\n\s*/g, ' ').trim();
-    console.log(this.fullContent);
-    // (3) 스트리밍 시작
+    this.prepareTokens();
     this.startStreaming();
   },
   beforeDestroy() {
-    if (this.timer) {
-      clearInterval(this.timer);
-    }
+    if (this.timer) clearTimeout(this.timer);
   },
   methods: {
-    /**
-     * 20ms 간격으로 한 글자씩 streamedContent에 추가하여
-     * LLM 스트리밍 효과처럼 보여줍니다.
-     */
+    prepareTokens() {
+      const regex = /(<[^>]+>|\s+|[^<\s]+)/g;
+      this.tokens = this.fullContent.match(regex);
+    },
     startStreaming() {
-      this.timer = setInterval(() => {
-        if (this.currentIndex < this.fullContent.length) {
-          this.streamedContent += this.fullContent[this.currentIndex];
-          this.currentIndex++;
-          this.$emit('content-updated'); // 🔥 자동 스크롤 이벤트 발생
+      const streamNextToken = () => {
+        if (this.currentIndex < this.tokens.length) {
+          this.streamedContent += this.tokens[this.currentIndex++];
+          //console.log(this.streamedContent);
+          this.$emit('content-updated');
+          const delay = 15 + Math.random() * 30; // 더 자연스러운 속도
+          this.timer = setTimeout(streamNextToken, delay);
         } else {
           this.$emit('update:isRunning', false);
-          clearInterval(this.timer);
         }
-      }, 20);
+      };
+      streamNextToken();
     }
   }
 };
 </script>
 
 <style scoped>
-/* (4) 스트리밍 영역의 white-space 설정 */
 .streamed-content {
-  white-space: normal; /* HTML 태그는 해석, 태그 사이 공백은 자동 조정 */
+  white-space: normal;
 }
-
-/* 필요 시 .response-template-container에 추가 스타일 적용 */
 .response-template-container {
-  /* 예: padding: 16px; */
-}
-
-/* Quasar-like 스타일(예시) */
-.q-pa-md {
   padding: 16px;
-}
-.q-mb-md {
-  margin-bottom: 16px;
-}
-.bg-grey-3 {
-  background-color: #e0e0e0;
-}
-.bg-grey-2 {
-  background-color: #eeeeee;
-}
-.bg-green-3 {
-  background-color: #a5d6a7;
-}
-.bg-red-3 {
-  background-color: #ef9a9a;
-}
-.text-black {
-  color: black;
-}
-.text-h6 {
-  font-size: 1.25rem;
-  font-weight: bold;
-}
-.q-pa-sm {
-  padding: 8px;
-}
-
-/* store-card, card-section 등 임의 클래스 */
-.store-card {
-  border: 1px solid #ccc;
-  margin-bottom: 16px;
-}
-.card-section {
-  padding: 8px;
-}
-
-/* 증감률에 따른 텍스트 색상 예시 */
-.text-negative {
-  color: red;
-}
-.text-positive {
-  color: green;
 }
 </style>
